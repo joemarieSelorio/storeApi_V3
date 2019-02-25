@@ -1,0 +1,14 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 15
+    },
+    "auditLog": "/mnt/c/apps/supply/logs/.c1e16396015720410544933642a35378e6228de8-audit.json",
+    "files": [
+        {
+            "date": 1551058470305,
+            "name": "/mnt/c/apps/supply/logs/event-2019-02-25.log",
+            "hash": "6bb6f5e2383551ece42f3c5e1f9fbab4"
+        }
+    ]
+}
