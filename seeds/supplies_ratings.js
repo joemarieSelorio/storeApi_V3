@@ -22,14 +22,13 @@ exports.seed = function(knex, Promise) {
         return Promise.all(ratingsPromise);
       });
 };
-
 const createRating = (knex, rating, supply) =>{
   return knex('supplies').where('name', supply).first()
       .then((supplyRecord)=>{
         return knex('ratings').insert({
           user: rating.user,
           rating: rating.rating,
-          supplies_id: supplyRecord.id,
+          supplyId: supplyRecord.id,
         });
       });
 };

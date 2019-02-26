@@ -1,7 +1,7 @@
 require('app-module-path').addPath(require('app-root-path').toString());
 const {map, pick} = require('lodash');
-const {createNewSupply, getAllSupply,
-  getSupplyById, deleteSupply}
+const {createNewSupply, createNewRating, getAllSupply, getSupplyByName,
+  getSupplyById, deleteRating, getRatings, deleteSupply}
   = require('api/repositories/SuppliesRepositories');
 const HttpError = require('api/responses/HttpError');
 const HttpNotFoundError = require('api/responses/HttpNotFoundError');
@@ -17,11 +17,10 @@ const logger = require('api/utilities/logger');
 async function getSupplyList(req, res, next) {
   try {
     const supplies = await getAllSupply();
-    logger.info(supplies);
     const supplySummary = map(supplies, (row)=>{
       return {
-        id: row.id,
-        details: {
+        data: {
+          id: row.id,
           name: row.name,
           description: row.description,
           imageUrl: row.imageUrl,
@@ -29,7 +28,7 @@ async function getSupplyList(req, res, next) {
         },
       };
     });
-    res.locals.resObj = new HttpSuccess(200,
+    res.locals.respObj = new HttpSuccess(200,
         'Sucessfully retrived all supplies', supplySummary);
     return next();
   } catch (error) {
@@ -44,14 +43,24 @@ async function getSupplyList(req, res, next) {
  */
 async function getSpecificSupply(req, res, next) {
   const {id} = req.params;
+  const supplyId = id;
   try {
-    const supply = await getSupplyById(id);
+    const supply = await getSupplyById({id});
+    logger.info(supply);
     if (!supply) {
       return next(new HttpNotFoundError('Supplies Not Found'));
     }
-    res.locals.resObj = new HttpSuccess(200, 'Sucessfully retrived supply',
+    const ratings = await getRatings({supplyId});
+    logger.info(ratings);
+    res.locals.respObj = new HttpSuccess(200, 'Sucessfully retrived supply',
         {datails: pick(supply,
-            ['name', 'description', 'imageUrl', 'quantity'])});
+            ['id', 'name', 'description', 'imageUrl', 'quantity']),
+        ratingsDetails: map(ratings, (row)=>{
+          return {
+            user: row.user,
+            rating: row.rating,
+          };
+        })});
     return next();
   } catch (error) {
     return next(new HttpError(500, 9999, error.message));
@@ -65,13 +74,44 @@ async function getSpecificSupply(req, res, next) {
  * @param {*} next  - next function to be called
  */
 async function addNewSupply(req, res, next) {
-  const {name, description, imageUrl, quantity} = req.params;
+  const {name, description, imageUrl, quantity} = req.body;
   try {
+    const existingSupply = await getSupplyByName({name});
+    logger.info(name);
+    logger.info(existingSupply);
+    if (existingSupply) {
+      return next(new HttpError(403, 9999,
+          'Supply item is already in the inventory'));
+    }
     const newSupply = await createNewSupply(name,
         description, imageUrl, quantity);
-    res.locals.resObj = new HttpSuccess(200, 'Sucessfully added new Supply',
+    res.locals.respObj = new HttpSuccess(200, 'Sucessfully added new Supply',
         {datails: pick(newSupply,
             ['name', 'description', 'imageUrl', 'quantity'])});
+    return next();
+  } catch (error) {
+    return next(new HttpError(500, 9999, error.message));
+  }
+}
+
+/**
+ * @todo - add new supply to the database
+ * @param {*} req - request to the server
+ * @param {*} res - response from the server
+ * @param {*} next  - next function to be called
+ */
+async function addNewRating(req, res, next) {
+  const {id} = req.params;
+  const supplyId = id;
+  const {user, rating} = req.body;
+  try {
+    const existingSupply = await getSupplyById({id});
+    if (!existingSupply) {
+      return next(new HttpNotFoundError('Supplies Not Found'));
+    }
+    const newRating = await createNewRating(user, rating, supplyId);
+    res.locals.respObj = new HttpSuccess(200, 'Sucessfully added new Supply',
+        {newRating: pick(newRating, ['user', 'rating', 'supplyId'])});
     return next();
   } catch (error) {
     return next(new HttpError(500, 9999, error.message));
@@ -84,23 +124,25 @@ async function addNewSupply(req, res, next) {
  * @param {*} next  - next function to be called
  */
 async function removeSupply(req, res, next) {
-  const {id} = req.params.id;
+  const {id} = req.params;
+  const supplyId= id;
   try {
-    const removedSupply = await deleteSupply(id);
+    await deleteRating({supplyId});
+    const removedSupply = await deleteSupply({id});
     if (!removedSupply) {
       return next(new HttpNotFoundError('Supply not found'));
     }
-    res.locals.resObj = new HttpSuccess(200, 'deleted!');
+    res.locals.respObj = new HttpSuccess(200, 'deleted!');
     return next();
   } catch (error) {
     return next(new HttpError(500, 9999, error.message));
   }
 }
-
 module.exports = {
   getSupplyList,
   getSpecificSupply,
   addNewSupply,
   removeSupply,
+  addNewRating,
 };
 

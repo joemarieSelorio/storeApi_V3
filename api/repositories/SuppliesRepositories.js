@@ -18,9 +18,22 @@ const createNewSupply = async (name, description, imageUrl, quantity) => {
     imageUrl,
     quantity,
   };
-
   try {
-    return await service.insertIntoTable(process.env.TABLE1, data);
+    return await service.insertIntoTable(process.env.SUPPLIES_TABLE, data);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+
+const createNewRating = async (user, rating, supplyId) => {
+  const data = {
+    user,
+    rating,
+    supplyId,
+  };
+  try {
+    return await service.insertIntoTable('ratings', data);
   } catch (error) {
     throw new Error(error.message);
   }
@@ -33,7 +46,7 @@ const createNewSupply = async (name, description, imageUrl, quantity) => {
 const getAllSupply = async () => {
   try {
     const fields = ['name', 'description', 'imageUrl', 'quantity'];
-    return await service.getTableContents(process.env.TABLE1, fields);
+    return await service.getTableContents(process.env.SUPPLIES_TABLE, fields);
   } catch (error) {
     throw new Error(error.message);
   }
@@ -44,10 +57,43 @@ const getAllSupply = async () => {
  * @param {*} id - id of the supply
  */
 const getSupplyById = async (id) => {
+  const fields = ['id', 'name', 'description', 'imageUrl', 'quantity'];
   try {
-    return await service.getTableRow(process.env.TABLE1, id);
+    return await service.getTableRow(process.env.SUPPLIES_TABLE, id, fields);
   } catch (error) {
     throw new Error(error.message);
+  }
+};
+
+const getRatings = async (supplyId) => {
+  const fields = ['user', 'rating', 'supplyId'];
+  try {
+    return await service.getSpecificTableContents(process.env.RATINGS_TABLE,
+        fields, supplyId);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+const getSupplyByName = async (name) => {
+  const fields = ['id', 'description', 'imageUrl', 'quantity'];
+  try {
+    return await service.getTableRow(process.env.SUPPLIES_TABLE,
+        name, fields);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+/**
+ * @todo - delete specific rating
+ * @param {*} supplyId - foreign key in the ratings table
+ */
+const deleteRating = async (supplyId) => {
+  try {
+    return await service.deleteRow('ratings', supplyId);
+  } catch (error) {
+    throw new Error(error);
   }
 };
 
@@ -57,7 +103,7 @@ const getSupplyById = async (id) => {
  */
 const deleteSupply = async (id) => {
   try {
-    return await service.deleteRow(process.env.TABLE1, id);
+    return await service.deleteRow('supplies', id);
   } catch (error) {
     throw new Error(error);
   }
@@ -65,8 +111,12 @@ const deleteSupply = async (id) => {
 
 module.exports = {
   createNewSupply,
+  getRatings,
+  createNewRating,
   getAllSupply,
   getSupplyById,
+  getSupplyByName,
+  deleteRating,
   deleteSupply,
 };
 

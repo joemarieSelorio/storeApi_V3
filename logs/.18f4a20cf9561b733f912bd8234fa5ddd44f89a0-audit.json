@@ -1,0 +1,14 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 15
+    },
+    "auditLog": "/mnt/d/storeApiV3/storeApi_V3/logs/.18f4a20cf9561b733f912bd8234fa5ddd44f89a0-audit.json",
+    "files": [
+        {
+            "date": 1551140332857,
+            "name": "/mnt/d/storeApiV3/storeApi_V3/logs/event-2019-02-26.log",
+            "hash": "b7f3b948f0fd15c82c9129fd036f0fae"
+        }
+    ]
+}

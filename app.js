@@ -26,7 +26,7 @@ connection.connect((err)=>{
 
 app.use(bodyParser.json());
 app.use('/api/supplies/',
-    require('api/routes/SuppliesRoutes'));
+    require('api/routes/SuppliesRoutes'), _processResponse);
 
 /**
  * Uniform JSON response object sendin
